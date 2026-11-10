@@ -1,0 +1,411 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Management Dashboard - Student Freelance Marketplace{% endblock %}
+
+{% block content %}
+<div class="section-header" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 14px;">
+    <div>
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+            <div style="width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--accent-amber-light); color: var(--accent-amber); display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h1 class="section-title" style="margin-bottom: 0;">Administration Portal</h1>
+        </div>
+        <p class="section-subtitle">Manage platform users, projects, proposals, moderation, and system analytics</p>
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+        <a href="/admin/" target="_blank" class="btn btn-secondary btn-sm">
+            <i class="fa-solid fa-database"></i> Django Native Admin &rarr;
+        </a>
+    </div>
+</div>
+
+<!-- PLATFORM KEY METRICS -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-number" style="color: #818cf8;">{{ total_users }}</div>
+        <div class="stat-label">Total Users ({{ total_students }} Students, {{ total_clients }} Clients)</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number" style="color: #60a5fa;">{{ total_projects }}</div>
+        <div class="stat-label">{{ active_projects }} Active &bull; {{ completed_projects }} Completed</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number" style="color: #34d399;">₹{{ total_budget_sum }}</div>
+        <div class="stat-label">Cumulative Platform Value</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number" style="color: #fbbf24;">{{ total_reviews }}</div>
+        <div class="stat-label">Ratings & Reviews Logged</div>
+    </div>
+</div>
+
+<!-- ADMIN TABS -->
+<div class="admin-tabs">
+    <a href="?tab=overview" class="admin-tab-btn {% if active_tab == 'overview' %}active{% endif %}">
+        <i class="fa-solid fa-chart-pie"></i> System Overview
+    </a>
+    <a href="?tab=users" class="admin-tab-btn {% if active_tab == 'users' %}active{% endif %}">
+        <i class="fa-solid fa-users"></i> Users Management ({{ total_users }})
+    </a>
+    <a href="?tab=projects" class="admin-tab-btn {% if active_tab == 'projects' %}active{% endif %}">
+        <i class="fa-solid fa-briefcase"></i> Projects Management ({{ total_projects }})
+    </a>
+    <a href="?tab=proposals" class="admin-tab-btn {% if active_tab == 'proposals' %}active{% endif %}">
+        <i class="fa-solid fa-file-signature"></i> Proposals ({{ total_proposals }})
+    </a>
+    <a href="?tab=reviews" class="admin-tab-btn {% if active_tab == 'reviews' %}active{% endif %}">
+        <i class="fa-solid fa-star"></i> Reviews Moderation ({{ total_reviews }})
+    </a>
+</div>
+
+<!-- TAB 1: OVERVIEW -->
+{% if active_tab == 'overview' %}
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+        <div class="card">
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 16px;">
+                <i class="fa-solid fa-user-plus" style="color: var(--primary); margin-right: 6px;"></i>
+                Recently Registered Users
+            </h3>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                {% for u in users_list|slice:":6" %}
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--bg-surface); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div class="avatar-circle {{ u.profile.avatar_color|default:'indigo' }}" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                {{ u.profile.get_initials }}
+                            </div>
+                            <div>
+                                <strong style="color: #fff; font-size: 0.9rem;">{{ u.username }}</strong>
+                                <div style="font-size: 0.75rem; color: var(--text-dim);">{{ u.email }}</div>
+                            </div>
+                        </div>
+                        <span class="badge badge-{{ u.profile.role }}">{{ u.profile.get_role_display|default:u.profile.role }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+            <a href="?tab=users" class="btn btn-secondary btn-sm" style="width: 100%; margin-top: 14px;">
+                View All Users &rarr;
+            </a>
+        </div>
+
+        <div class="card">
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 16px;">
+                <i class="fa-solid fa-briefcase" style="color: var(--secondary); margin-right: 6px;"></i>
+                Latest Projects
+            </h3>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                {% for p in projects_list|slice:":6" %}
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--bg-surface); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+                        <div>
+                            <strong style="color: #fff; font-size: 0.9rem;">
+                                <a href="{% url 'project_detail' p.id %}">{{ p.title }}</a>
+                            </strong>
+                            <div style="font-size: 0.75rem; color: var(--text-dim);">By {{ p.client.username }} &bull; ₹{{ p.budget }}</div>
+                        </div>
+                        <span class="badge badge-{{ p.status }}">{{ p.get_status_display }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+            <a href="?tab=projects" class="btn btn-secondary btn-sm" style="width: 100%; margin-top: 14px;">
+                View All Projects &rarr;
+            </a>
+        </div>
+    </div>
+
+<!-- TAB 2: USERS MANAGEMENT -->
+{% elif active_tab == 'users' %}
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+            <h2 style="font-size: 1.3rem; font-weight: 700; color: #fff;">
+                All Registered Users ({{ users_list.count }})
+            </h2>
+            <form method="GET" action="" style="display: flex; gap: 8px;">
+                <input type="hidden" name="tab" value="users">
+                <input type="text" name="user_q" class="form-input" style="padding: 6px 12px; font-size: 0.85rem; width: 220px;" placeholder="Search username, email..." value="{{ user_q }}">
+                <button type="submit" class="btn btn-primary btn-sm">Search</button>
+                {% if user_q %}
+                    <a href="?tab=users" class="btn btn-secondary btn-sm">Clear</a>
+                {% endif %}
+            </form>
+        </div>
+
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Role</th>
+                        <th>University / Detail</th>
+                        <th>Joined</th>
+                        <th>Status</th>
+                        <th style="text-align: right;">Admin Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users_list %}
+                        <tr>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div class="avatar-circle {{ u.profile.avatar_color|default:'indigo' }}" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                        {{ u.profile.get_initials }}
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 700; color: #fff;">
+                                            {{ u.username }}
+                                            {% if u.is_superuser %}
+                                                <span class="badge badge-admin" style="font-size: 0.65rem; padding: 1px 6px;">Superuser</span>
+                                            {% endif %}
+                                        </div>
+                                        <div style="font-size: 0.78rem; color: var(--text-dim);">{{ u.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge badge-{{ u.profile.role }}">
+                                    {{ u.profile.get_role_display|default:u.profile.role }}
+                                </span>
+                            </td>
+                            <td>
+                                <div style="font-size: 0.85rem; color: var(--text-muted);">
+                                    {{ u.profile.university|default:"-" }}
+                                </div>
+                            </td>
+                            <td>
+                                <div style="font-size: 0.82rem; color: var(--text-dim);">
+                                    {{ u.date_joined|date:"M d, Y" }}
+                                </div>
+                            </td>
+                            <td>
+                                {% if u.is_active %}
+                                    <span class="badge badge-open">Active</span>
+                                {% else %}
+                                    <span class="badge badge-cancelled">Banned</span>
+                                {% endif %}
+                            </td>
+                            <td style="text-align: right;">
+                                <div style="display: inline-flex; gap: 6px;">
+                                    {% if u.profile.role == 'student' %}
+                                        <a href="{% url 'freelancer_profile' u.id %}" class="btn btn-secondary btn-sm" title="View Public Profile">
+                                            <i class="fa-solid fa-eye"></i>
+                                        </a>
+                                    {% endif %}
+
+                                    {% if u != request.user %}
+                                        <form method="POST" action="{% url 'admin_toggle_user_status' u.id %}" style="display: inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn {% if u.is_active %}btn-secondary{% else %}btn-success{% endif %} btn-sm" title="{% if u.is_active %}Deactivate (Ban) User{% else %}Re-activate User{% endif %}">
+                                                <i class="fa-solid {% if u.is_active %}fa-ban{% else %}fa-check{% endif %}"></i>
+                                            </button>
+                                        </form>
+
+                                        <form method="POST" action="{% url 'admin_delete_user' u.id %}" style="display: inline;" onsubmit="return confirm('Are you sure you want to permanently delete user {{ u.username }} and all their data?');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-danger btn-sm" title="Delete User">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 30px; color: var(--text-dim);">
+                                No users matched your search.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+<!-- TAB 3: PROJECTS MANAGEMENT -->
+{% elif active_tab == 'projects' %}
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+            <h2 style="font-size: 1.3rem; font-weight: 700; color: #fff;">
+                All Marketplace Projects ({{ projects_list.count }})
+            </h2>
+            <form method="GET" action="" style="display: flex; gap: 8px;">
+                <input type="hidden" name="tab" value="projects">
+                <input type="text" name="project_q" class="form-input" style="padding: 6px 12px; font-size: 0.85rem; width: 220px;" placeholder="Search title, client..." value="{{ project_q }}">
+                <button type="submit" class="btn btn-primary btn-sm">Search</button>
+                {% if project_q %}
+                    <a href="?tab=projects" class="btn btn-secondary btn-sm">Clear</a>
+                {% endif %}
+            </form>
+        </div>
+
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Title & Category</th>
+                        <th>Client</th>
+                        <th>Budget</th>
+                        <th>Deadline</th>
+                        <th>Status</th>
+                        <th>Assigned Freelancer</th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in projects_list %}
+                        <tr>
+                            <td>
+                                <div style="font-weight: 700; color: #fff;">
+                                    <a href="{% url 'project_detail' p.id %}">{{ p.title }}</a>
+                                </div>
+                                <span class="badge badge-student" style="font-size: 0.7rem;">{{ p.category }}</span>
+                            </td>
+                            <td>
+                                <div style="font-size: 0.88rem; color: var(--text-main);">{{ p.client.username }}</div>
+                            </td>
+                            <td>
+                                <strong style="color: #34d399;">₹{{ p.budget }}</strong>
+                            </td>
+                            <td>
+                                <div style="font-size: 0.82rem; color: var(--text-dim);">{{ p.deadline }}</div>
+                            </td>
+                            <td>
+                                <span class="badge badge-{{ p.status }}">{{ p.get_status_display }}</span>
+                            </td>
+                            <td>
+                                {% if p.assigned_to %}
+                                    <span style="color: #818cf8; font-size: 0.85rem;">{{ p.assigned_to.username }}</span>
+                                {% else %}
+                                    <span style="color: var(--text-dim); font-size: 0.8rem;">Unassigned</span>
+                                {% endif %}
+                            </td>
+                            <td style="text-align: right;">
+                                <div style="display: inline-flex; gap: 6px;">
+                                    <a href="{% url 'project_detail' p.id %}" class="btn btn-secondary btn-sm">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'edit_project' p.id %}" class="btn btn-secondary btn-sm">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </a>
+                                    <form method="POST" action="{% url 'admin_delete_project' p.id %}" style="display: inline;" onsubmit="return confirm('Delete project &quot;{{ p.title }}&quot;?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger btn-sm">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 30px; color: var(--text-dim);">
+                                No projects matched your search.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+<!-- TAB 4: PROPOSALS -->
+{% elif active_tab == 'proposals' %}
+    <div class="card">
+        <h2 style="font-size: 1.3rem; font-weight: 700; color: #fff; margin-bottom: 20px;">
+            Submitted Proposals (Latest 25)
+        </h2>
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Project</th>
+                        <th>Student</th>
+                        <th>Bid Amount</th>
+                        <th>Est. Days</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in applications_list %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'project_detail' a.project.id %}" style="color: #fff; font-weight: 600;">
+                                    {{ a.project.title }}
+                                </a>
+                            </td>
+                            <td>
+                                <a href="{% url 'freelancer_profile' a.student.id %}" style="color: var(--primary);">
+                                    {{ a.student.username }}
+                                </a>
+                            </td>
+                            <td><strong style="color: #34d399;">₹{{ a.bid_amount }}</strong></td>
+                            <td>{{ a.estimated_days }} days</td>
+                            <td><span class="badge badge-{{ a.status }}">{{ a.get_status_display }}</span></td>
+                            <td style="color: var(--text-dim); font-size: 0.8rem;">{{ a.created_at|date:"M d, Y" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="6" style="text-align: center; padding: 30px;">No proposals found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+<!-- TAB 5: REVIEWS MODERATION -->
+{% elif active_tab == 'reviews' %}
+    <div class="card">
+        <h2 style="font-size: 1.3rem; font-weight: 700; color: #fff; margin-bottom: 20px;">
+            Ratings & Reviews Moderation
+        </h2>
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Reviewer &rarr; Reviewee</th>
+                        <th>Project</th>
+                        <th>Rating</th>
+                        <th>Feedback Comment</th>
+                        <th>Date</th>
+                        <th style="text-align: right;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in reviews_list %}
+                        <tr>
+                            <td>
+                                <strong style="color: #fff;">{{ r.reviewer.username }}</strong> &rarr; <span style="color: var(--primary);">{{ r.reviewee.username }}</span>
+                            </td>
+                            <td>
+                                <a href="{% url 'project_detail' r.project.id %}" style="color: var(--text-muted);">
+                                    {{ r.project.title|truncatechars:25 }}
+                                </a>
+                            </td>
+                            <td style="color: #fbbf24; white-space: nowrap;">
+                                ★ {{ r.rating }}.0
+                            </td>
+                            <td style="max-width: 300px; color: var(--text-muted); font-size: 0.85rem;">
+                                {{ r.comment|truncatewords:20 }}
+                            </td>
+                            <td style="color: var(--text-dim); font-size: 0.8rem; white-space: nowrap;">
+                                {{ r.created_at|date:"M d, Y" }}
+                            </td>
+                            <td style="text-align: right;">
+                                <form method="POST" action="{% url 'admin_delete_review' r.id %}" style="display: inline;" onsubmit="return confirm('Delete this review?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger btn-sm" title="Remove Review">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="6" style="text-align: center; padding: 30px;">No reviews logged yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

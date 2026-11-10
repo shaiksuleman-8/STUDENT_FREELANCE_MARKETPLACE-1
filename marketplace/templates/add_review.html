@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Leave a Review for {{ reviewee.username }} - Student Freelance Marketplace{% endblock %}
+
+{% block content %}
+<div style="max-width: 620px; margin: 30px auto;">
+    <div style="margin-bottom: 20px;">
+        <a href="{% url 'project_detail' project.id %}" style="color: var(--text-muted); font-size: 0.88rem; display: inline-flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-arrow-left"></i> Back to Project Details
+        </a>
+    </div>
+
+    <div class="card" style="padding: 36px;">
+        <div style="text-align: center; margin-bottom: 28px;">
+            <div style="width: 56px; height: 56px; border-radius: var(--radius-full); background: rgba(251, 191, 36, 0.15); color: #fbbf24; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 16px;">
+                <i class="fa-solid fa-star"></i>
+            </div>
+            <h1 style="font-size: 1.75rem; font-weight: 800; color: #fff;">
+                Review & Rate Collaboration
+            </h1>
+            <p style="color: var(--text-muted); font-size: 0.92rem; margin-top: 6px;">
+                Share your experience working with <strong>{{ reviewee.username }}</strong> on "{{ project.title }}"
+            </p>
+        </div>
+
+        <form method="POST" action="{% url 'add_review' project.id reviewee.id %}">
+            {% csrf_token %}
+
+            <!-- STAR RATING SELECTOR -->
+            <div style="text-align: center; margin-bottom: 28px;">
+                <label class="form-label" style="font-size: 1rem; margin-bottom: 12px; display: block;">Select Star Rating</label>
+                <div id="starContainer" style="display: inline-flex; gap: 10px; font-size: 2.2rem; cursor: pointer; color: #fbbf24;">
+                    <i class="fa-solid fa-star" data-val="1" onclick="setRating(1)"></i>
+                    <i class="fa-solid fa-star" data-val="2" onclick="setRating(2)"></i>
+                    <i class="fa-solid fa-star" data-val="3" onclick="setRating(3)"></i>
+                    <i class="fa-solid fa-star" data-val="4" onclick="setRating(4)"></i>
+                    <i class="fa-solid fa-star" data-val="5" onclick="setRating(5)"></i>
+                </div>
+                <input type="hidden" name="rating" id="ratingInput" value="5">
+                <div id="ratingText" style="color: #fbbf24; font-weight: 700; margin-top: 8px; font-size: 1rem;">
+                    5 Stars - Excellent Collaboration
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="comment">Your Feedback & Review *</label>
+                <textarea name="comment" id="comment" class="form-textarea" placeholder="Detail the quality of work, adherence to deadlines, responsiveness in communication, and overall professionalism..." rows="6" required></textarea>
+                <div class="form-hint">Your review will be public on their student profile to help future clients and collaborators.</div>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button type="submit" class="btn btn-primary" style="flex: 1; padding: 13px;">
+                    <i class="fa-solid fa-award"></i> Publish Review
+                </button>
+                <a href="{% url 'project_detail' project.id %}" class="btn btn-secondary">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const ratingLabels = {
+        1: "1 Star - Unsatisfactory",
+        2: "2 Stars - Needs Improvement",
+        3: "3 Stars - Average",
+        4: "4 Stars - Great Work",
+        5: "5 Stars - Excellent Collaboration"
+    };
+
+    function setRating(val) {
+        document.getElementById('ratingInput').value = val;
+        document.getElementById('ratingText').innerText = ratingLabels[val];
+
+        const stars = document.querySelectorAll('#starContainer i');
+        stars.forEach(function(star, idx) {
+            if (idx < val) {
+                star.classList.remove('fa-regular');
+                star.classList.add('fa-solid');
+            } else {
+                star.classList.remove('fa-solid');
+                star.classList.add('fa-regular');
+            }
+        });
+    }
+</script>
+{% endblock %}

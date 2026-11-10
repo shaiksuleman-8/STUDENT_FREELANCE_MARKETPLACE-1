@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Profile - Student Freelance Marketplace{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 30px auto;">
+    <div style="margin-bottom: 20px;">
+        <a href="{% url 'dashboard' %}" style="color: var(--text-muted); font-size: 0.88rem; display: inline-flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <div class="card" style="padding: 36px;">
+        <div style="margin-bottom: 28px;">
+            <h1 style="font-size: 1.85rem; font-weight: 800; color: #fff;">Edit Profile & Portfolio</h1>
+            <p style="color: var(--text-muted); font-size: 0.92rem; margin-top: 6px;">
+                Keep your skills, bio, links, and university details up-to-date to attract high-value opportunities
+            </p>
+        </div>
+
+        <form method="POST" action="{% url 'edit_profile' %}">
+            {% csrf_token %}
+
+            <!-- PERSONAL INFO SECTION -->
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 16px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px;">
+                <i class="fa-solid fa-user" style="color: var(--primary); margin-right: 6px;"></i>
+                Personal Information
+            </h3>
+
+            <div class="form-grid-3">
+                <div class="form-group">
+                    <label class="form-label" for="first_name">First Name</label>
+                    <input type="text" name="first_name" id="first_name" class="form-input" value="{{ profile.user.first_name }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="last_name">Last Name</label>
+                    <input type="text" name="last_name" id="last_name" class="form-input" value="{{ profile.user.last_name }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="email">Email Address</label>
+                    <input type="email" name="email" id="email" class="form-input" value="{{ profile.user.email }}">
+                </div>
+            </div>
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label" for="phone">Phone / Contact Number</label>
+                    <input type="text" name="phone" id="phone" class="form-input" placeholder="+91 98765 43210" value="{{ profile.phone }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="role">Active Account Role</label>
+                    <select name="role" id="role" class="form-select">
+                        <option value="student" {% if profile.role == 'student' %}selected{% endif %}>Student Freelancer</option>
+                        <option value="client" {% if profile.role == 'client' %}selected{% endif %}>Client / Employer</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- ACADEMIC & EDUCATION SECTION -->
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin: 24px 0 16px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px;">
+                <i class="fa-solid fa-building-columns" style="color: var(--secondary); margin-right: 6px;"></i>
+                University & Education
+            </h3>
+
+            <div class="form-grid-3">
+                <div class="form-group">
+                    <label class="form-label" for="university">University / College</label>
+                    <input type="text" name="university" id="university" class="form-input" placeholder="e.g. Stanford University" value="{{ profile.university }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="major">Major / Field of Study</label>
+                    <input type="text" name="major" id="major" class="form-input" placeholder="e.g. Computer Science" value="{{ profile.major }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="graduation_year">Graduation Year</label>
+                    <input type="text" name="graduation_year" id="graduation_year" class="form-input" placeholder="e.g. 2026" value="{{ profile.graduation_year }}">
+                </div>
+            </div>
+
+            <!-- FREELANCER SPECIFIC SECTION -->
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin: 24px 0 16px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px;">
+                <i class="fa-solid fa-briefcase" style="color: var(--accent-amber); margin-right: 6px;"></i>
+                Freelancer Headline, Skills & Rates
+            </h3>
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label" for="headline">Professional Headline</label>
+                    <input type="text" name="headline" id="headline" class="form-input" placeholder="e.g. Full-Stack Developer | Python, Django, React" value="{{ profile.headline }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="hourly_rate">Hourly Rate (₹/hr)</label>
+                    <input type="number" name="hourly_rate" id="hourly_rate" class="form-input" step="0.01" min="0" value="{{ profile.hourly_rate }}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="skills">Skills & Technologies (Comma-separated)</label>
+                <input type="text" name="skills" id="skills" class="form-input" placeholder="e.g. Python, Django, JavaScript, React, Figma, UI/UX" value="{{ profile.skills }}">
+                <div class="form-hint">Separate individual skills with commas so they render as searchable tags.</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="bio">Bio & Professional Summary</label>
+                <textarea name="bio" id="bio" class="form-textarea" placeholder="Introduce yourself, your coding/design experience, notable hackathons or university projects, and what problems you love solving." rows="5">{{ profile.bio }}</textarea>
+            </div>
+
+            <!-- PORTFOLIO & SOCIAL LINKS -->
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin: 24px 0 16px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px;">
+                <i class="fa-solid fa-link" style="color: #60a5fa; margin-right: 6px;"></i>
+                Portfolio & Online Presence
+            </h3>
+
+            <div class="form-grid-3">
+                <div class="form-group">
+                    <label class="form-label" for="github_url">GitHub URL</label>
+                    <input type="url" name="github_url" id="github_url" class="form-input" placeholder="https://github.com/username" value="{{ profile.github_url }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="linkedin_url">LinkedIn URL</label>
+                    <input type="url" name="linkedin_url" id="linkedin_url" class="form-input" placeholder="https://linkedin.com/in/username" value="{{ profile.linkedin_url }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="portfolio_url">Portfolio / Personal Website</label>
+                    <input type="url" name="portfolio_url" id="portfolio_url" class="form-input" placeholder="https://yourportfolio.com" value="{{ profile.portfolio_url }}">
+                </div>
+            </div>
+
+            <!-- AVATAR COLOR -->
+            <div class="form-group">
+                <label class="form-label" for="avatar_color">Avatar Color Theme</label>
+                <select name="avatar_color" id="avatar_color" class="form-select">
+                    <option value="indigo" {% if profile.avatar_color == 'indigo' %}selected{% endif %}>Indigo Gradient</option>
+                    <option value="emerald" {% if profile.avatar_color == 'emerald' %}selected{% endif %}>Emerald Gradient</option>
+                    <option value="violet" {% if profile.avatar_color == 'violet' %}selected{% endif %}>Violet Gradient</option>
+                    <option value="amber" {% if profile.avatar_color == 'amber' %}selected{% endif %}>Amber Gradient</option>
+                    <option value="rose" {% if profile.avatar_color == 'rose' %}selected{% endif %}>Rose Gradient</option>
+                    <option value="cyan" {% if profile.avatar_color == 'cyan' %}selected{% endif %}>Cyan Gradient</option>
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 30px;">
+                <button type="submit" class="btn btn-primary" style="flex: 1; padding: 13px; font-size: 1rem;">
+                    <i class="fa-solid fa-check"></i> Save & Update Profile
+                </button>
+                <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Messages - Student Freelance Marketplace{% endblock %}
+
+{% block content %}
+<div class="section-header" style="margin-bottom: 20px;">
+    <h1 class="section-title">Direct Messages</h1>
+    <p class="section-subtitle">Coordinate project milestones, specifications, and deliverable reviews</p>
+</div>
+
+<div class="messages-container">
+    <!-- LEFT SIDEBAR: CONVERSATION LIST -->
+    <div class="messages-sidebar {% if active_chat_user %}hide-mobile{% endif %}">
+        <div class="sidebar-header">
+            <h3 style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 12px;">
+                <i class="fa-solid fa-inbox" style="color: var(--primary); margin-right: 6px;"></i>
+                Conversations
+            </h3>
+            <input type="text" id="conversationSearchInput" class="form-input" style="padding: 8px 12px; font-size: 0.85rem;" placeholder="Filter chats..." onkeyup="filterConversations()">
+        </div>
+
+        <div class="conversation-list" id="conversationList">
+            {% for conv in conversations %}
+                <a href="{% url 'messages_chat' conv.user.id %}" class="conversation-item {% if active_chat_user and active_chat_user.id == conv.user.id %}active{% endif %}">
+                    <div class="conv-avatar avatar-circle {{ conv.user.profile.avatar_color|default:'indigo' }}">
+                        {{ conv.user.profile.get_initials }}
+                    </div>
+                    <div class="conv-body">
+                        <div class="conv-header">
+                            <span class="conv-name">{{ conv.user.first_name|default:conv.user.username }}</span>
+                            {% if conv.last_message %}
+                                <span class="conv-time">{{ conv.last_message.created_at|date:"M d" }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="conv-snippet">
+                            {% if conv.last_message %}
+                                {% if conv.last_message.sender == user %}You: {% endif %}{{ conv.last_message.body }}
+                            {% else %}
+                                <em>New conversation started</em>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if conv.unread_count > 0 %}
+                        <div class="conv-unread-dot" title="{{ conv.unread_count }} unread message(s)"></div>
+                    {% endif %}
+                </a>
+            {% empty %}
+                <div style="text-align: center; padding: 40px 16px; color: var(--text-dim);">
+                    <i class="fa-regular fa-comments" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
+                    <p style="font-size: 0.88rem;">No active conversations yet.</p>
+                    <p style="font-size: 0.78rem; margin-top: 4px;">Click "Message" on any project or freelancer profile to start chatting!</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- RIGHT MAIN PANEL: ACTIVE CHAT WINDOW -->
+    <div class="chat-window">
+        {% if active_chat_user %}
+            <!-- CHAT HEADER -->
+            <div class="chat-header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <a href="{% url 'messages_inbox' %}" class="btn btn-secondary btn-sm" style="display: none;" id="mobileBackBtn">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </a>
+                    <div class="avatar-circle {{ active_chat_user.profile.avatar_color|default:'indigo' }}" style="width: 40px; height: 40px; font-size: 1rem;">
+                        {{ active_chat_user.profile.get_initials }}
+                    </div>
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <h3 style="font-size: 1.05rem; font-weight: 700; color: #fff;">
+                                {{ active_chat_user.first_name|default:active_chat_user.username }} {{ active_chat_user.last_name }}
+                            </h3>
+                            <span class="badge badge-{{ active_chat_user.profile.role }}">
+                                {{ active_chat_user.profile.get_role_display }}
+                            </span>
+                        </div>
+                        <div style="font-size: 0.78rem; color: var(--text-muted);">
+                            {{ active_chat_user.profile.university|default:active_chat_user.email }}
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    {% if linked_project %}
+                        <span class="badge badge-student" style="max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            <i class="fa-solid fa-briefcase"></i> {{ linked_project.title }}
+                        </span>
+                    {% endif %}
+                    {% if active_chat_user.profile.role == 'student' %}
+                        <a href="{% url 'freelancer_profile' active_chat_user.id %}" class="btn btn-secondary btn-sm">
+                            <i class="fa-solid fa-user"></i> Profile
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- CHAT MESSAGES SCROLL AREA -->
+            <div class="chat-messages-area" id="chatMessagesArea">
+                {% for msg in chat_messages %}
+                    <div class="message-bubble {% if msg.sender == user %}sent{% else %}received{% endif %}">
+                        <div>{{ msg.body }}</div>
+                        <div class="message-meta">
+                            {{ msg.created_at|date:"h:i A" }}
+                            {% if msg.sender == user %}
+                                &bull; <i class="fa-solid {% if msg.is_read %}fa-check-double{% else %}fa-check{% endif %}" style="font-size: 0.65rem;"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% empty %}
+                    <div style="text-align: center; margin: auto; color: var(--text-muted);">
+                        <div class="avatar-circle {{ active_chat_user.profile.avatar_color|default:'indigo' }}" style="width: 56px; height: 56px; margin: 0 auto 12px; font-size: 1.4rem;">
+                            {{ active_chat_user.profile.get_initials }}
+                        </div>
+                        <h4 style="color: #fff; font-size: 1.1rem;">Start of conversation with {{ active_chat_user.username }}</h4>
+                        <p style="font-size: 0.85rem; margin-top: 4px;">Say hello and discuss project specifications!</p>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- CHAT INPUT BAR -->
+            <div class="chat-input-bar">
+                <form method="POST" action="{% url 'send_message' %}" class="chat-form" id="chatForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="recipient_id" value="{{ active_chat_user.id }}">
+                    {% if linked_project %}
+                        <input type="hidden" name="project_id" value="{{ linked_project.id }}">
+                    {% endif %}
+                    <input type="text" name="body" class="chat-input" id="messageInput" placeholder="Type a message to {{ active_chat_user.username }}... (Press Enter to send)" autocomplete="off" required>
+                    <button type="submit" class="btn btn-primary" style="padding: 12px 20px;">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+
+        {% else %}
+            <!-- EMPTY STATE WHEN NO CHAT SELECTED -->
+            <div style="margin: auto; text-align: center; padding: 40px; color: var(--text-muted);">
+                <div class="brand-icon" style="margin: 0 auto 18px; width: 64px; height: 64px; font-size: 2rem;">
+                    <i class="fa-solid fa-comments"></i>
+                </div>
+                <h2 style="color: #fff; font-size: 1.5rem; margin-bottom: 8px;">Select a Conversation</h2>
+                <p style="max-width: 420px; margin: 0 auto 20px; font-size: 0.92rem;">
+                    Choose a conversation from the sidebar or click "Message" on any project or student freelancer card to start chatting.
+                </p>
+                <a href="{% url 'browse_projects' %}" class="btn btn-secondary btn-sm">Explore Projects</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    // Auto-scroll chat window to bottom
+    const chatArea = document.getElementById('chatMessagesArea');
+    if (chatArea) {
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    // Filter conversations live in sidebar
+    function filterConversations() {
+        const query = document.getElementById('conversationSearchInput').value.toLowerCase();
+        const items = document.querySelectorAll('.conversation-item');
+        items.forEach(function(item) {
+            const text = item.innerText.toLowerCase();
+            if (text.includes(query)) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+
+    // Responsive mobile view check
+    if (window.innerWidth <= 768) {
+        const backBtn = document.getElementById('mobileBackBtn');
+        if (backBtn) backBtn.style.display = 'inline-flex';
+    }
+</script>
+{% endblock %}

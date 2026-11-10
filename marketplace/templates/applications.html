@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Applications & Proposals - Student Freelance Marketplace{% endblock %}
+
+{% block content %}
+<div class="section-header" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 14px;">
+    <div>
+        <h1 class="section-title">
+            {% if profile.role == 'client' %}
+                Proposals Received for Your Projects
+            {% else %}
+                Your Submitted Project Proposals
+            {% endif %}
+        </h1>
+        <p class="section-subtitle">
+            {% if profile.role == 'client' %}
+                Review, accept, or decline student bids and coordinate directly
+            {% else %}
+                Track status updates and communication for all your applications
+            {% endif %}
+        </p>
+    </div>
+
+    <div>
+        {% if profile.role == 'client' %}
+            <a href="{% url 'post_project' %}" class="btn btn-primary">
+                <i class="fa-solid fa-plus-circle"></i> Post New Project
+            </a>
+        {% else %}
+            <a href="{% url 'browse_projects' %}" class="btn btn-primary">
+                <i class="fa-solid fa-magnifying-glass"></i> Browse More Projects
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card" style="padding: 24px;">
+    {% for app in applications %}
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 22px; margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 14px; flex-wrap: wrap;">
+                <div>
+                    <span class="badge badge-student" style="margin-bottom: 6px;">{{ app.project.category }}</span>
+                    <h2 style="font-size: 1.25rem; font-weight: 700; color: #fff;">
+                        <a href="{% url 'project_detail' app.project.id %}" style="color: #fff;">
+                            {{ app.project.title }}
+                        </a>
+                    </h2>
+                    <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 4px;">
+                        {% if profile.role == 'client' %}
+                            Student Applicant: 
+                            <a href="{% url 'freelancer_profile' app.student.id %}" style="color: var(--primary); font-weight: 700;">
+                                {{ app.student.first_name|default:app.student.username }} {{ app.student.last_name }}
+                            </a>
+                            ({{ app.student.profile.university|default:"Student" }}) &bull;
+                            <span style="color: #fbbf24;">★ {{ app.student.profile.average_rating }}</span>
+                        {% else %}
+                            Client: <strong>{{ app.project.client.username }}</strong> &bull;
+                            Submitted: {{ app.created_at|date:"M d, Y" }}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div style="text-align: right;">
+                    <div style="font-size: 1.3rem; font-weight: 800; color: #34d399;">
+                        ₹{{ app.bid_amount }}
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-dim);">
+                        Est: <strong>{{ app.estimated_days }} days</strong> (Budget: ₹{{ app.project.budget }})
+                    </div>
+                    <span class="badge badge-{{ app.status }}" style="margin-top: 6px;">
+                        {{ app.get_status_display }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- PROPOSAL TEXT -->
+            <div style="background: var(--bg-input); padding: 14px 18px; border-radius: var(--radius-sm); font-size: 0.92rem; color: var(--text-main); line-height: 1.6; margin-bottom: 16px; border-left: 3px solid var(--primary); white-space: pre-line;">
+                <strong style="color: #fff; display: block; margin-bottom: 4px;">Cover Letter:</strong>
+                {{ app.proposal }}
+            </div>
+
+            <!-- ACTIONS -->
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div style="font-size: 0.8rem; color: var(--text-dim);">
+                    Project Deadline: <strong>{{ app.project.deadline }}</strong>
+                </div>
+
+                <div style="display: flex; gap: 8px;">
+                    {% if profile.role == 'client' %}
+                        <a href="{% url 'messages_chat' app.student.id %}?project_id={{ app.project.id }}" class="btn btn-secondary btn-sm">
+                            <i class="fa-solid fa-message"></i> Message Student
+                        </a>
+
+                        {% if app.status == 'pending' and app.project.status == 'open' %}
+                            <form method="POST" action="{% url 'update_application' app.id 'accepted' %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Accept this proposal?');">
+                                    <i class="fa-solid fa-check"></i> Accept Proposal
+                                </button>
+                            </form>
+                            <form method="POST" action="{% url 'update_application' app.id 'rejected' %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Decline this proposal?');">
+                                    <i class="fa-solid fa-xmark"></i> Decline
+                                </button>
+                            </form>
+                        {% endif %}
+                    {% else %}
+                        <a href="{% url 'messages_chat' app.project.client.id %}?project_id={{ app.project.id }}" class="btn btn-secondary btn-sm">
+                            <i class="fa-solid fa-message"></i> Message Client
+                        </a>
+                        <a href="{% url 'project_detail' app.project.id %}" class="btn btn-primary btn-sm">
+                            View Project
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div style="text-align: center; padding: 50px 20px;">
+            <i class="fa-solid fa-file-circle-xmark" style="font-size: 3rem; color: var(--text-dim); margin-bottom: 16px;"></i>
+            <h3 style="color: #fff; font-size: 1.3rem;">No Applications Found</h3>
+            <p style="color: var(--text-muted); margin: 8px auto 20px; max-width: 480px;">
+                {% if profile.role == 'client' %}
+                    You have not received any proposals on your projects yet. Check back soon!
+                {% else %}
+                    You haven't applied to any projects yet. Find exciting opportunities now!
+                {% endif %}
+            </p>
+            {% if profile.role == 'student' %}
+                <a href="{% url 'browse_projects' %}" class="btn btn-primary">Browse Open Projects</a>
+            {% endif %}
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

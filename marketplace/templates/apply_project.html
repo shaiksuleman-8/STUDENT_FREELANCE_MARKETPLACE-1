@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Apply for {{ project.title }} - Student Freelance Marketplace{% endblock %}
+
+{% block content %}
+<div style="max-width: 680px; margin: 30px auto;">
+    <div style="margin-bottom: 20px;">
+        <a href="{% url 'project_detail' project.id %}" style="color: var(--text-muted); font-size: 0.88rem; display: inline-flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-arrow-left"></i> Back to Project Details
+        </a>
+    </div>
+
+    <div class="card" style="padding: 36px;">
+        <div style="margin-bottom: 24px;">
+            <span class="badge badge-student" style="margin-bottom: 8px;">{{ project.category }}</span>
+            <h1 style="font-size: 1.7rem; font-weight: 800; color: #fff;">
+                Apply for: {{ project.title }}
+            </h1>
+            <div style="display: flex; gap: 16px; margin-top: 10px; font-size: 0.88rem; color: var(--text-muted);">
+                <span>Client Budget: <strong style="color: #34d399;">₹{{ project.budget }}</strong></span>
+                <span>&bull;</span>
+                <span>Deadline: <strong>{{ project.deadline }}</strong></span>
+            </div>
+        </div>
+
+        <form method="POST" action="{% url 'apply_project' project.id %}">
+            {% csrf_token %}
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label" for="bid_amount">Your Bid Amount (₹) *</label>
+                    <input type="number" name="bid_amount" id="bid_amount" class="form-input" value="{{ project.budget }}" step="0.01" min="1" required>
+                    <div class="form-hint">Enter the total amount you propose to complete this project.</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="estimated_days">Estimated Delivery Days *</label>
+                    <input type="number" name="estimated_days" id="estimated_days" class="form-input" value="7" min="1" required>
+                    <div class="form-hint">Number of days from acceptance to complete work.</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="proposal">Proposal & Cover Letter *</label>
+                <textarea name="proposal" id="proposal" class="form-textarea" placeholder="Detail your approach, what tools and frameworks you will use, relevant coursework, and link to code samples or design portfolios." rows="6" required></textarea>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button type="submit" class="btn btn-primary" style="flex: 1; padding: 13px;">
+                    <i class="fa-solid fa-paper-plane"></i> Submit Proposal
+                </button>
+                <a href="{% url 'project_detail' project.id %}" class="btn btn-secondary">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

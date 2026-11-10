@@ -1,0 +1,383 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ project.title }} - Student Freelance Marketplace{% endblock %}
+
+{% block content %}
+<!-- BREADCRUMB / BACK LINK -->
+<div style="margin-bottom: 20px;">
+    <a href="{% url 'browse_projects' %}" style="color: var(--text-muted); font-size: 0.88rem; display: inline-flex; align-items: center; gap: 6px;">
+        <i class="fa-solid fa-arrow-left"></i> Back to Browse Projects
+    </a>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
+    <!-- LEFT MAIN PROJECT COLUMN -->
+    <div>
+        <div class="card" style="margin-bottom: 28px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 12px; flex-wrap: wrap;">
+                <div>
+                    <div style="display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
+                        <span class="badge badge-student">{{ project.category }}</span>
+                        <span class="badge badge-{{ project.status }}">{{ project.get_status_display }}</span>
+                        <span class="badge" style="background: var(--bg-elevated); color: var(--text-muted);">
+                            <i class="fa-solid fa-layer-group"></i> {{ project.experience_level }}
+                        </span>
+                    </div>
+                    <h1 style="font-size: 1.85rem; font-weight: 800; color: #fff; line-height: 1.25;">
+                        {{ project.title }}
+                    </h1>
+                </div>
+
+                <div style="text-align: right;">
+                    <div style="font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Project Budget</div>
+                    <div style="font-size: 1.8rem; font-weight: 800; color: #34d399;">₹{{ project.budget }}</div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 16px; font-size: 0.85rem; color: var(--text-muted); padding: 12px 0; border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle); margin: 18px 0; flex-wrap: wrap;">
+                <span><i class="fa-regular fa-calendar-check"></i> Deadline: <strong>{{ project.deadline }}</strong></span>
+                <span>&bull;</span>
+                <span><i class="fa-regular fa-clock"></i> Posted on: <strong>{{ project.created_at|date:"M d, Y" }}</strong></span>
+                <span>&bull;</span>
+                <span><i class="fa-solid fa-users"></i> Proposals: <strong>{{ project.proposals_count }}</strong></span>
+            </div>
+
+            <!-- DESCRIPTION -->
+            <div style="margin-bottom: 24px;">
+                <h3 style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 10px;">
+                    Project Description
+                </h3>
+                <div style="color: var(--text-muted); font-size: 0.96rem; line-height: 1.7; white-space: pre-line;">
+                    {{ project.description }}
+                </div>
+            </div>
+
+            <!-- REQUIRED SKILLS -->
+            <div>
+                <h3 style="font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 10px;">
+                    Required Skills & Technologies
+                </h3>
+                <div class="skills-tags-wrap">
+                    {% for skill in project.get_skills_list %}
+                        <span class="skill-tag" style="padding: 6px 12px; font-size: 0.85rem;">
+                            <i class="fa-solid fa-tag"></i> {{ skill }}
+                        </span>
+                    {% empty %}
+                        <span class="skill-tag">Open to all skills</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- ASSIGNED FREELANCER NOTIFICATION -->
+            {% if project.assigned_to %}
+                <div style="margin-top: 24px; padding: 16px; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <i class="fa-solid fa-user-check" style="color: var(--primary); font-size: 1.4rem;"></i>
+                        <div>
+                            <div style="font-size: 0.95rem; font-weight: 700; color: #fff;">
+                                Assigned Freelancer: {{ project.assigned_to.first_name|default:project.assigned_to.username }}
+                            </div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">
+                                Project is actively In Progress.
+                            </div>
+                        </div>
+                    </div>
+                    <a href="{% url 'freelancer_profile' project.assigned_to.id %}" class="btn btn-secondary btn-sm">
+                        View Freelancer Profile
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- REVIEWS SECTION IF PROJECT HAS REVIEWS -->
+        {% if reviews %}
+            <div class="card" style="margin-bottom: 28px;">
+                <h2 style="font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 16px;">
+                    <i class="fa-solid fa-star" style="color: #fbbf24; margin-right: 6px;"></i>
+                    Project Reviews & Feedback
+                </h2>
+                {% for rev in reviews %}
+                    <div style="background: var(--bg-surface); padding: 16px; border-radius: var(--radius-md); margin-bottom: 12px; border: 1px solid var(--border-subtle);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <div>
+                                <strong style="color: #fff;">{{ rev.reviewer.username }}</strong>
+                                <span style="font-size: 0.8rem; color: var(--text-dim);">reviewed {{ rev.reviewee.username }}</span>
+                            </div>
+                            <div style="color: #fbbf24; font-size: 0.95rem;">
+                                {% for i in "12345"|make_list %}
+                                    {% if forloop.counter <= rev.rating %}
+                                        <i class="fa-solid fa-star"></i>
+                                    {% else %}
+                                        <i class="fa-regular fa-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.5;">{{ rev.comment }}</p>
+                        <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 6px;">{{ rev.created_at|date:"M d, Y" }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- PROPOSALS MANAGEMENT (FOR CLIENT) -->
+        {% if is_client %}
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="font-size: 1.3rem; font-weight: 700; color: #fff;">
+                        <i class="fa-solid fa-inbox" style="color: var(--primary); margin-right: 8px;"></i>
+                        Proposals Received ({{ proposals.count }})
+                    </h2>
+                    {% if project.status == 'in_progress' %}
+                        <form method="POST" action="{% url 'complete_project' project.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Complete this project and proceed to leave a review?');">
+                                <i class="fa-solid fa-circle-check"></i> Mark Complete & Review
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+
+                {% for proposal in proposals %}
+                    <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 20px; margin-bottom: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; margin-bottom: 12px; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div class="avatar-circle {{ proposal.student.profile.avatar_color|default:'indigo' }}" style="width: 44px; height: 44px; font-size: 1.1rem;">
+                                    {{ proposal.student.profile.get_initials }}
+                                </div>
+                                <div>
+                                    <div style="font-weight: 700; font-size: 1rem; color: #fff;">
+                                        <a href="{% url 'freelancer_profile' proposal.student.id %}" style="color: #fff;">
+                                            {{ proposal.student.first_name|default:proposal.student.username }} {{ proposal.student.last_name }}
+                                        </a>
+                                        <span class="badge badge-student" style="margin-left: 6px;">Student</span>
+                                    </div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                                        {{ proposal.student.profile.university|default:"University Student" }} &bull;
+                                        <span style="color: #fbbf24;">★ {{ proposal.student.profile.average_rating }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="text-align: right;">
+                                <div style="font-size: 1.25rem; font-weight: 800; color: #34d399;">
+                                    ₹{{ proposal.bid_amount }}
+                                </div>
+                                <div style="font-size: 0.78rem; color: var(--text-dim);">
+                                    Delivery in <strong>{{ proposal.estimated_days }} days</strong>
+                                </div>
+                                <span class="badge badge-{{ proposal.status }}" style="margin-top: 4px;">
+                                    {{ proposal.get_status_display }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- PROPOSAL COVER LETTER -->
+                        <div style="background: var(--bg-input); padding: 14px; border-radius: var(--radius-sm); font-size: 0.92rem; color: var(--text-main); line-height: 1.6; margin-bottom: 16px; border-left: 3px solid var(--primary); white-space: pre-line;">
+                            {{ proposal.proposal }}
+                        </div>
+
+                        <!-- CLIENT ACTIONS ON PROPOSAL -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <div style="font-size: 0.78rem; color: var(--text-dim);">
+                                Submitted {{ proposal.created_at|date:"M d, Y" }}
+                            </div>
+
+                            <div style="display: flex; gap: 8px;">
+                                <a href="{% url 'messages_chat' proposal.student.id %}?project_id={{ project.id }}" class="btn btn-secondary btn-sm">
+                                    <i class="fa-solid fa-message"></i> Chat with Student
+                                </a>
+
+                                {% if proposal.status == 'pending' and project.status == 'open' %}
+                                    <form method="POST" action="{% url 'update_application' proposal.id 'accepted' %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Accept this proposal? This will assign the student and move the project to in-progress.');">
+                                            <i class="fa-solid fa-check"></i> Accept Proposal
+                                        </button>
+                                    </form>
+
+                                    <form method="POST" action="{% url 'update_application' proposal.id 'rejected' %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Decline this proposal?');">
+                                            <i class="fa-solid fa-xmark"></i> Decline
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p style="color: var(--text-muted); text-align: center; padding: 30px;">
+                        No student proposals submitted yet. You will see proposals here as soon as students apply.
+                    </p>
+                {% endfor %}
+            </div>
+
+        <!-- PROPOSAL SUBMISSION AREA (FOR STUDENTS OR GUESTS) -->
+        {% else %}
+            {% if has_applied %}
+                <!-- STUDENT ALREADY APPLIED STATUS -->
+                <div class="card" style="border-color: rgba(99, 102, 241, 0.4); background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(21, 28, 44, 0.9) 100%);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                        <h2 style="font-size: 1.25rem; font-weight: 700; color: #fff;">
+                            <i class="fa-solid fa-circle-check" style="color: #34d399; margin-right: 8px;"></i>
+                            Your Proposal is Submitted
+                        </h2>
+                        <span class="badge badge-{{ user_application.status }}">
+                            {{ user_application.get_status_display }}
+                        </span>
+                    </div>
+
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 14px;">
+                        You proposed a bid of <strong style="color: #34d399;">₹{{ user_application.bid_amount }}</strong> with an estimated completion time of <strong>{{ user_application.estimated_days }} days</strong>.
+                    </p>
+
+                    <div style="background: var(--bg-input); padding: 14px; border-radius: var(--radius-sm); font-size: 0.9rem; color: var(--text-main); margin-bottom: 16px; border-left: 3px solid var(--primary); white-space: pre-line;">
+                        {{ user_application.proposal }}
+                    </div>
+
+                    <div style="display: flex; gap: 10px;">
+                        <a href="{% url 'messages_chat' project.client.id %}?project_id={{ project.id }}" class="btn btn-primary btn-sm">
+                            <i class="fa-solid fa-comment-dots"></i> Message Client Directly
+                        </a>
+                        {% if is_assigned and project.status == 'completed' and not user_review %}
+                            <a href="{% url 'add_review' project.id project.client.id %}" class="btn btn-secondary btn-sm">
+                                <i class="fa-solid fa-star"></i> Review Client
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+            {% elif project.status == 'open' %}
+                <!-- INLINE PROPOSAL SUBMISSION FORM -->
+                <div class="card">
+                    <h2 style="font-size: 1.3rem; font-weight: 700; color: #fff; margin-bottom: 8px;">
+                        <i class="fa-solid fa-paper-plane" style="color: var(--primary); margin-right: 8px;"></i>
+                        Submit Your Proposal
+                    </h2>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
+                        Describe your relevant skills, past work, and how you will successfully accomplish this project.
+                    </p>
+
+                    {% if user.is_authenticated %}
+                        <form method="POST" action="{% url 'apply_project' project.id %}">
+                            {% csrf_token %}
+                            <div class="form-grid-2">
+                                <div class="form-group">
+                                    <label class="form-label" for="bid_amount">Your Bid Amount (₹) *</label>
+                                    <input type="number" name="bid_amount" id="bid_amount" class="form-input" value="{{ project.budget }}" step="0.01" min="1" required>
+                                    <div class="form-hint">Client's budget is ₹{{ project.budget }}</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="estimated_days">Estimated Delivery (Days) *</label>
+                                    <input type="number" name="estimated_days" id="estimated_days" class="form-input" value="7" min="1" required>
+                                    <div class="form-hint">Project deadline: {{ project.deadline }}</div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="proposal">Proposal & Cover Letter *</label>
+                                <textarea name="proposal" id="proposal" class="form-textarea" placeholder="Highlight why you are the best student for this task. Include relevant university coursework, GitHub links, or previous projects." rows="5" required></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary" style="padding: 12px 24px;">
+                                <i class="fa-solid fa-paper-plane"></i> Submit Proposal to Client
+                            </button>
+                        </form>
+                    {% else %}
+                        <div style="background: var(--bg-surface); padding: 24px; border-radius: var(--radius-md); text-align: center;">
+                            <p style="color: var(--text-muted); margin-bottom: 16px;">
+                                Please log in or register a free student freelancer account to submit a proposal for this project.
+                            </p>
+                            <div style="display: flex; gap: 12px; justify-content: center;">
+                                <a href="{% url 'login' %}?next={% url 'project_detail' project.id %}" class="btn btn-secondary">Log In</a>
+                                <a href="{% url 'register' %}" class="btn btn-primary">Register Free</a>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="card" style="text-align: center; padding: 30px;">
+                    <i class="fa-solid fa-lock" style="font-size: 2rem; color: var(--text-dim); margin-bottom: 12px;"></i>
+                    <h3 style="color: #fff;">This Project is No Longer Accepting Proposals</h3>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 6px;">Status: {{ project.get_status_display }}</p>
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    <!-- RIGHT CLIENT CARD COLUMN -->
+    <div>
+        <!-- CLIENT OVERVIEW CARD -->
+        <div class="card" style="margin-bottom: 24px;">
+            <div style="font-size: 0.8rem; text-transform: uppercase; font-weight: 700; color: var(--text-dim); margin-bottom: 12px;">
+                About the Client
+            </div>
+            <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px;">
+                <div class="avatar-circle {{ project.client.profile.avatar_color|default:'indigo' }}" style="width: 52px; height: 52px; font-size: 1.3rem;">
+                    {{ project.client.profile.get_initials }}
+                </div>
+                <div>
+                    <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff;">
+                        {{ project.client.username }}
+                    </h3>
+                    <div style="font-size: 0.82rem; color: var(--text-muted);">
+                        Employer / Client
+                    </div>
+                </div>
+            </div>
+
+            <div style="border-top: 1px solid var(--border-subtle); padding-top: 14px; font-size: 0.88rem; display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-muted);">Member Since:</span>
+                    <span>{{ project.client.date_joined|date:"M Y" }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-muted);">Total Projects Posted:</span>
+                    <strong>{{ project.client.projects.count }}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-muted);">Client Rating:</span>
+                    <strong style="color: #fbbf24;">★ {{ project.client.profile.average_rating }}</strong>
+                </div>
+            </div>
+
+            {% if user.is_authenticated and user != project.client %}
+                <div style="margin-top: 18px;">
+                    <a href="{% url 'messages_chat' project.client.id %}?project_id={{ project.id }}" class="btn btn-secondary btn-sm" style="width: 100%;">
+                        <i class="fa-solid fa-message"></i> Send Direct Message
+                    </a>
+                </div>
+            {% endif %}
+
+            {% if is_client %}
+                <div style="margin-top: 18px; display: flex; gap: 8px;">
+                    <a href="{% url 'edit_project' project.id %}" class="btn btn-secondary btn-sm" style="flex: 1;">
+                        <i class="fa-solid fa-pen"></i> Edit Project
+                    </a>
+                    <form method="POST" action="{% url 'delete_project' project.id %}" style="display: inline;" onsubmit="return confirm('Delete this project?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- QUICK GUIDELINES -->
+        <div class="card">
+            <h4 style="font-size: 0.98rem; font-weight: 700; color: #fff; margin-bottom: 12px;">
+                <i class="fa-solid fa-shield-halved" style="color: var(--primary); margin-right: 6px;"></i>
+                StudentFreelance Guarantee
+            </h4>
+            <ul style="list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 0.85rem; color: var(--text-muted);">
+                <li><i class="fa-solid fa-check" style="color: #34d399; margin-right: 6px;"></i> Transparent student bids with clear milestones</li>
+                <li><i class="fa-solid fa-check" style="color: #34d399; margin-right: 6px;"></i> Real-time direct chat between client & student</li>
+                <li><i class="fa-solid fa-check" style="color: #34d399; margin-right: 6px;"></i> Bilateral ratings and verified reviews</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Post a New Project - Student Freelance Marketplace{% endblock %}
+
+{% block content %}
+<div style="max-width: 760px; margin: 30px auto;">
+    <div style="margin-bottom: 20px;">
+        <a href="{% url 'dashboard' %}" style="color: var(--text-muted); font-size: 0.88rem; display: inline-flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <div class="card" style="padding: 36px;">
+        <div style="margin-bottom: 28px;">
+            <div class="brand-icon" style="margin-bottom: 14px; width: 44px; height: 44px; font-size: 1.3rem;">
+                <i class="fa-solid fa-plus"></i>
+            </div>
+            <h1 style="font-size: 1.85rem; font-weight: 800; color: #fff;">Post a New Project</h1>
+            <p style="color: var(--text-muted); font-size: 0.92rem; margin-top: 6px;">
+                Reach talented, motivated university students ready to build and deliver your requirements
+            </p>
+        </div>
+
+        <form method="POST" action="{% url 'post_project' %}">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label class="form-label" for="title">Project Title *</label>
+                <input type="text" name="title" id="title" class="form-input" placeholder="e.g. Build Responsive Landing Page in React & Tailwind" required>
+                <div class="form-hint">A clear, descriptive title attracts the most relevant students.</div>
+            </div>
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label" for="category">Category *</label>
+                    <select name="category" id="category" class="form-select" required>
+                        {% for cat in categories %}
+                            <option value="{{ cat }}">{{ cat }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="experience_level">Target Experience Level *</label>
+                    <select name="experience_level" id="experience_level" class="form-select">
+                        {% for exp in experiences %}
+                            <option value="{{ exp.0 }}">{{ exp.1 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label" for="budget">Total Budget (₹) *</label>
+                    <input type="number" name="budget" id="budget" class="form-input" placeholder="e.g. 5000" step="0.01" min="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="deadline">Project Deadline *</label>
+                    <input type="date" name="deadline" id="deadline" class="form-input" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="skills_required">Skills Required (Comma-separated)</label>
+                <input type="text" name="skills_required" id="skills_required" class="form-input" placeholder="e.g. React, Tailwind CSS, Python, Figma">
+                <div class="form-hint">List key programming languages, tools, or design skills needed.</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="description">Detailed Description & Deliverables *</label>
+                <textarea name="description" id="description" class="form-textarea" placeholder="Explain the project scope, key deliverables, specifications, references, and what you expect from the student." rows="7" required></textarea>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button type="submit" class="btn btn-primary" style="flex: 1; padding: 13px; font-size: 1rem;">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Publish Project
+                </button>
+                <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

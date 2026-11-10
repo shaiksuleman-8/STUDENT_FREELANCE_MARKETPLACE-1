@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Browse Freelance Projects - Student Freelance Marketplace{% endblock %}
+
+{% block content %}
+<div class="section-header" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 14px;">
+    <div>
+        <h1 class="section-title">Explore Student Freelance Projects</h1>
+        <p class="section-subtitle">Discover opportunities posted by clients looking for verified student talent</p>
+    </div>
+    {% if user.is_authenticated and user_profile.role == 'client' %}
+        <a href="{% url 'post_project' %}" class="btn btn-primary">
+            <i class="fa-solid fa-plus-circle"></i> Post a Project
+        </a>
+    {% endif %}
+</div>
+
+<!-- SEARCH & FILTER BAR -->
+<div class="filter-bar-card">
+    <form method="GET" action="{% url 'browse_projects' %}">
+        <div class="filter-bar-grid">
+            <!-- Keyword search -->
+            <div class="form-group" style="margin-bottom: 0;">
+                <input type="text" name="q" class="form-input" placeholder="Search by title, description, skills..." value="{{ q }}">
+            </div>
+
+            <!-- Category selector -->
+            <div class="form-group" style="margin-bottom: 0;">
+                <select name="category" class="form-select">
+                    <option value="all">All Categories</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Status filter -->
+            <div class="form-group" style="margin-bottom: 0;">
+                <select name="status" class="form-select">
+                    <option value="all" {% if selected_status == 'all' %}selected{% endif %}>All Statuses</option>
+                    <option value="open" {% if selected_status == 'open' %}selected{% endif %}>Open for Bids</option>
+                    <option value="in_progress" {% if selected_status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                    <option value="completed" {% if selected_status == 'completed' %}selected{% endif %}>Completed</option>
+                </select>
+            </div>
+
+            <!-- Sort By -->
+            <div class="form-group" style="margin-bottom: 0;">
+                <select name="sort" class="form-select">
+                    <option value="newest" {% if selected_sort == 'newest' %}selected{% endif %}>Newest First</option>
+                    <option value="budget_high" {% if selected_sort == 'budget_high' %}selected{% endif %}>Budget: High to Low</option>
+                    <option value="budget_low" {% if selected_sort == 'budget_low' %}selected{% endif %}>Budget: Low to High</option>
+                    <option value="deadline" {% if selected_sort == 'deadline' %}selected{% endif %}>Closest Deadline</option>
+                </select>
+            </div>
+
+            <!-- Action buttons -->
+            <div style="display: flex; gap: 8px;">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa-solid fa-filter"></i> Filter
+                </button>
+                {% if q or selected_category != 'all' or selected_status != 'open' or min_budget or max_budget %}
+                    <a href="{% url 'browse_projects' %}" class="btn btn-secondary" title="Reset all filters">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Budget sub-filter row -->
+        <div style="display: flex; gap: 14px; margin-top: 14px; align-items: center; flex-wrap: wrap;">
+            <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Budget Range (₹):</span>
+            <input type="number" name="min_budget" class="form-input" style="width: 140px; padding: 6px 12px; font-size: 0.85rem;" placeholder="Min ₹" value="{{ min_budget }}">
+            <span style="color: var(--text-dim);">-</span>
+            <input type="number" name="max_budget" class="form-input" style="width: 140px; padding: 6px 12px; font-size: 0.85rem;" placeholder="Max ₹" value="{{ max_budget }}">
+            <span style="font-size: 0.85rem; color: var(--text-dim); margin-left: auto;">
+                Showing <strong>{{ total_found }}</strong> project{{ total_found|pluralize }}
+            </span>
+        </div>
+    </form>
+</div>
+
+<!-- PROJECT RESULTS GRID -->
+<div class="projects-grid">
+    {% for project in projects %}
+        <div class="project-card">
+            <div class="project-card-header">
+                <div>
+                    <div style="display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap;">
+                        <span class="badge badge-student">{{ project.category }}</span>
+                        <span class="badge badge-{{ project.status }}">{{ project.get_status_display }}</span>
+                    </div>
+                    <h2 class="project-title">
+                        <a href="{% url 'project_detail' project.id %}">{{ project.title }}</a>
+                    </h2>
+                </div>
+                <div class="project-budget-tag">
+                    ₹{{ project.budget }}
+                </div>
+            </div>
+
+            <p class="project-desc-snippet">{{ project.description }}</p>
+
+            <div class="skills-tags-wrap">
+                {% for skill in project.get_skills_list %}
+                    <span class="skill-tag"><i class="fa-solid fa-tag"></i> {{ skill }}</span>
+                {% empty %}
+                    <span class="skill-tag">Any Skill</span>
+                {% endfor %}
+            </div>
+
+            <div style="display: flex; gap: 12px; font-size: 0.8rem; color: var(--text-muted);">
+                <span><i class="fa-regular fa-clock"></i> Deadline: {{ project.deadline }}</span>
+                <span>&bull;</span>
+                <span><i class="fa-solid fa-users"></i> {{ project.proposals_count }} bid{{ project.proposals_count|pluralize }}</span>
+                <span>&bull;</span>
+                <span><i class="fa-solid fa-layer-group"></i> {{ project.experience_level }}</span>
+            </div>
+
+            <div class="project-card-footer">
+                <div class="client-meta-wrap">
+                    <i class="fa-solid fa-user-circle" style="color: var(--primary);"></i>
+                    <span>Client: <strong>{{ project.client.username }}</strong></span>
+                </div>
+                <a href="{% url 'project_detail' project.id %}" class="btn btn-primary btn-sm">
+                    View Details &rarr;
+                </a>
+            </div>
+        </div>
+    {% empty %}
+        <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 50px;">
+            <i class="fa-solid fa-magnifying-glass" style="font-size: 2.8rem; color: var(--text-dim); margin-bottom: 14px;"></i>
+            <h3 style="color: #fff; font-size: 1.3rem;">No Projects Matched Your Search</h3>
+            <p style="color: var(--text-muted); margin: 8px auto 20px; max-width: 480px;">
+                Try loosening your filters, clearing the search query, or checking other categories.
+            </p>
+            <a href="{% url 'browse_projects' %}" class="btn btn-secondary">Reset Filters</a>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

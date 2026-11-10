@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create Account - Student Freelance Marketplace{% endblock %}
+
+{% block content %}
+<div style="max-width: 640px; margin: 30px auto;">
+    <div class="card" style="padding: 36px;">
+        <div style="text-align: center; margin-bottom: 28px;">
+            <div class="brand-icon" style="margin: 0 auto 16px; width: 48px; height: 48px; font-size: 1.5rem;">
+                <i class="fa-solid fa-user-plus"></i>
+            </div>
+            <h1 style="font-size: 1.85rem; font-weight: 800; color: #fff;">Join Student Freelance</h1>
+            <p style="color: var(--text-muted); font-size: 0.92rem; margin-top: 6px;">
+                Choose how you want to participate in our verified talent ecosystem
+            </p>
+        </div>
+
+        <form method="POST" action="{% url 'register' %}">
+            {% csrf_token %}
+
+            <!-- ROLE SELECTION -->
+            <label class="form-label" style="margin-bottom: 10px;">Select Account Type</label>
+            <div class="role-cards-grid">
+                <label class="role-radio-card" id="studentCard" onclick="selectRole('student')">
+                    <input type="radio" name="role" value="student" id="roleStudent" checked>
+                    <div>
+                        <div class="role-card-title">
+                            <i class="fa-solid fa-graduation-cap" style="color: #818cf8; margin-right: 6px;"></i> Student Freelancer
+                        </div>
+                        <div class="role-card-desc">
+                            Find paid gigs, build your developer/designer portfolio, and earn while studying.
+                        </div>
+                    </div>
+                </label>
+
+                <label class="role-radio-card" id="clientCard" onclick="selectRole('client')">
+                    <input type="radio" name="role" value="client" id="roleClient">
+                    <div>
+                        <div class="role-card-title">
+                            <i class="fa-solid fa-briefcase" style="color: #22d3ee; margin-right: 6px;"></i> Client / Employer
+                        </div>
+                        <div class="role-card-desc">
+                            Post projects, review student proposals, and hire energetic talent for your tasks.
+                        </div>
+                    </div>
+                </label>
+            </div>
+
+            <!-- NAME & USERNAME -->
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label" for="first_name">First Name</label>
+                    <input type="text" name="first_name" id="first_name" class="form-input" placeholder="e.g. John" value="{{ first_name|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="last_name">Last Name</label>
+                    <input type="text" name="last_name" id="last_name" class="form-input" placeholder="e.g. Doe" value="{{ last_name|default:'' }}">
+                </div>
+            </div>
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label" for="username">Username *</label>
+                    <input type="text" name="username" id="username" class="form-input" placeholder="e.g. johndoe" required value="{{ username|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="email">Email Address *</label>
+                    <input type="email" name="email" id="email" class="form-input" placeholder="e.g. john@university.edu" required value="{{ email|default:'' }}">
+                </div>
+            </div>
+
+            <!-- STUDENT SPECIFIC FIELDS -->
+            <div id="studentExtraFields">
+                <div class="form-group">
+                    <label class="form-label" for="university">University / College Name</label>
+                    <input type="text" name="university" id="university" class="form-input" placeholder="e.g. Stanford University / MIT / Local Tech" value="{{ university|default:'' }}">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="skills">Skills & Expertise</label>
+                    <input type="text" name="skills" id="skills" class="form-input" placeholder="Comma-separated: Python, Django, React, Figma, UI/UX" value="{{ skills|default:'' }}">
+                    <div class="form-hint">List your strongest technical or creative capabilities.</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="headline">Professional Headline</label>
+                    <input type="text" name="headline" id="headline" class="form-input" placeholder="e.g. Computer Science Undergrad & Full-Stack Developer" value="{{ headline|default:'' }}">
+                </div>
+            </div>
+
+            <!-- PASSWORDS -->
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label" for="password">Password *</label>
+                    <input type="password" name="password" id="password" class="form-input" placeholder="Min. 6 characters" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="password_confirm">Confirm Password *</label>
+                    <input type="password" name="password_confirm" id="password_confirm" class="form-input" placeholder="Repeat your password" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 13px; font-size: 1rem; margin-top: 10px;">
+                <i class="fa-solid fa-arrow-right"></i> Create My Account
+            </button>
+        </form>
+
+        <div style="text-align: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-subtle); font-size: 0.9rem; color: var(--text-muted);">
+            Already have an account? 
+            <a href="{% url 'login' %}" style="color: var(--primary); font-weight: 700;">Sign in here</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    function selectRole(role) {
+        const studentCard = document.getElementById('studentCard');
+        const clientCard = document.getElementById('clientCard');
+        const studentRadio = document.getElementById('roleStudent');
+        const clientRadio = document.getElementById('roleClient');
+        const extraFields = document.getElementById('studentExtraFields');
+
+        if (role === 'student') {
+            studentRadio.checked = true;
+            studentCard.classList.add('selected');
+            clientCard.classList.remove('selected');
+            extraFields.style.display = 'block';
+        } else {
+            clientRadio.checked = true;
+            clientCard.classList.add('selected');
+            studentCard.classList.remove('selected');
+            extraFields.style.display = 'none';
+        }
+    }
+
+    // Initialize state
+    document.addEventListener('DOMContentLoaded', function() {
+        selectRole('student');
+    });
+</script>
+{% endblock %}

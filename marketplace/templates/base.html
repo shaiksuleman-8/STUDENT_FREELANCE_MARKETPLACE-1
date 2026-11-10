@@ -1,0 +1,271 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Student Freelance Marketplace - Learn, Earn, Build{% endblock %}</title>
+    <!-- Google Fonts & Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'marketplace/style.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    <!-- TOP NAVIGATION -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="{% url 'home' %}" class="brand-logo">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <span>Student<span class="gradient-text">Freelance</span></span>
+            </a>
+
+            <!-- Desktop Links -->
+            <nav class="nav-links">
+                <a href="{% url 'browse_projects' %}" class="nav-link {% if request.resolver_match.url_name == 'browse_projects' %}active{% endif %}">
+                    <i class="fa-solid fa-briefcase"></i> Browse Projects
+                </a>
+                <a href="{% url 'freelancers_list' %}" class="nav-link {% if request.resolver_match.url_name == 'freelancers_list' %}active{% endif %}">
+                    <i class="fa-solid fa-users"></i> Freelancers
+                </a>
+
+                {% if user.is_authenticated %}
+                    <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                        <i class="fa-solid fa-chart-line"></i> Dashboard
+                    </a>
+                    <a href="{% url 'applications' %}" class="nav-link {% if request.resolver_match.url_name == 'applications' %}active{% endif %}">
+                        <i class="fa-solid fa-file-lines"></i> Applications
+                    </a>
+                    <a href="{% url 'messages_inbox' %}" class="nav-link {% if 'messages' in request.resolver_match.url_name %}active{% endif %}">
+                        <i class="fa-solid fa-comment-dots"></i> Messages
+                        {% if unread_messages_count > 0 %}
+                            <span class="nav-badge-pill">{{ unread_messages_count }}</span>
+                        {% endif %}
+                    </a>
+                    {% if user.is_staff or user.is_superuser %}
+                        <a href="{% url 'admin_dashboard' %}" class="nav-link {% if 'admin_dashboard' in request.resolver_match.url_name %}active{% endif %}">
+                            <i class="fa-solid fa-shield-halved"></i> Admin
+                        </a>
+                    {% endif %}
+                {% endif %}
+            </nav>
+
+            <!-- User Dropdown & CTA -->
+            <div class="nav-actions">
+                {% if user.is_authenticated %}
+                    <div class="nav-user-dropdown" id="userMenuDropdown">
+                        <div class="user-avatar-btn" onclick="toggleUserDropdown(event)">
+                            <div class="avatar-circle {{ user_profile.avatar_color|default:'indigo' }}">
+                                {{ user_profile.get_initials|default:user.username|slice:":2"|upper }}
+                            </div>
+                            <span class="user-name-label">{{ user.first_name|default:user.username }}</span>
+                            <i class="fa-solid fa-chevron-down" style="font-size: 0.72rem; color: var(--text-dim);"></i>
+                        </div>
+                        <div class="dropdown-menu" id="dropdownMenu">
+                            <div style="padding: 6px 12px 10px;">
+                                <div style="font-size: 0.88rem; font-weight: 700; color: #fff;">{{ user.username }}</div>
+                                <span class="badge badge-{{ user_profile.role|default:'student' }}" style="margin-top: 4px;">
+                                    {{ user_profile.get_role_display|default:user_profile.role|title }}
+                                </span>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <a href="{% url 'dashboard' %}" class="dropdown-item">
+                                <i class="fa-solid fa-gauge-high"></i> Dashboard
+                            </a>
+                            <a href="{% url 'edit_profile' %}" class="dropdown-item">
+                                <i class="fa-solid fa-user-pen"></i> Edit Profile
+                            </a>
+                            {% if user_profile.role == 'student' %}
+                                <a href="{% url 'freelancer_profile' user.id %}" class="dropdown-item">
+                                    <i class="fa-solid fa-id-badge"></i> Public Profile
+                                </a>
+                            {% endif %}
+                            {% if user_profile.role == 'client' %}
+                                <a href="{% url 'post_project' %}" class="dropdown-item">
+                                    <i class="fa-solid fa-circle-plus"></i> Post Project
+                                </a>
+                            {% endif %}
+                            {% if user.is_staff or user.is_superuser %}
+                                <a href="{% url 'admin_dashboard' %}" class="dropdown-item">
+                                    <i class="fa-solid fa-shield-halved"></i> Admin Panel
+                                </a>
+                            {% endif %}
+                            <div class="dropdown-divider"></div>
+                            <a href="{% url 'logout' %}" class="dropdown-item" style="color: #fca5a5;">
+                                <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+                            </a>
+                        </div>
+                    </div>
+                {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-secondary btn-sm">Log In</a>
+                    <a href="{% url 'register' %}" class="btn btn-primary btn-sm">Get Started</a>
+                {% endif %}
+
+                <!-- Mobile Hamburger Button -->
+                <button class="hamburger-btn" onclick="toggleMobileMenu()" aria-label="Toggle navigation">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Drawer Navigation -->
+        <div class="mobile-nav-drawer" id="mobileNavDrawer">
+            <a href="{% url 'browse_projects' %}" class="nav-link">
+                <i class="fa-solid fa-briefcase"></i> Browse Projects
+            </a>
+            <a href="{% url 'freelancers_list' %}" class="nav-link">
+                <i class="fa-solid fa-users"></i> Freelancers
+            </a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'dashboard' %}" class="nav-link">
+                    <i class="fa-solid fa-chart-line"></i> Dashboard
+                </a>
+                <a href="{% url 'applications' %}" class="nav-link">
+                    <i class="fa-solid fa-file-lines"></i> Applications
+                </a>
+                <a href="{% url 'messages_inbox' %}" class="nav-link">
+                    <i class="fa-solid fa-comment-dots"></i> Messages
+                    {% if unread_messages_count > 0 %}
+                        <span class="nav-badge-pill">{{ unread_messages_count }}</span>
+                    {% endif %}
+                </a>
+                <a href="{% url 'edit_profile' %}" class="nav-link">
+                    <i class="fa-solid fa-user-pen"></i> Edit Profile
+                </a>
+                {% if user.is_staff or user.is_superuser %}
+                    <a href="{% url 'admin_dashboard' %}" class="nav-link">
+                        <i class="fa-solid fa-shield-halved"></i> Admin Dashboard
+                    </a>
+                {% endif %}
+                <a href="{% url 'logout' %}" class="nav-link" style="color: #fca5a5;">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+                </a>
+            {% else %}
+                <div style="display: flex; gap: 10px; margin-top: 8px;">
+                    <a href="{% url 'login' %}" class="btn btn-secondary btn-sm" style="flex: 1;">Log In</a>
+                    <a href="{% url 'register' %}" class="btn btn-primary btn-sm" style="flex: 1;">Get Started</a>
+                </div>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- TOAST NOTIFICATIONS -->
+    {% if messages %}
+        <div class="toast-container">
+            {% for message in messages %}
+                <div class="toast toast-{{ message.tags|default:'info' }}">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        {% if message.tags == 'success' %}
+                            <i class="fa-solid fa-circle-check"></i>
+                        {% elif message.tags == 'error' %}
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        {% else %}
+                            <i class="fa-solid fa-circle-info"></i>
+                        {% endif %}
+                        <span>{{ message }}</span>
+                    </div>
+                    <button type="button" class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- MAIN PAGE CONTENT -->
+    <main class="main-wrapper">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div>
+                <div class="brand-logo" style="margin-bottom: 14px;">
+                    <div class="brand-icon">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <span>Student<span class="gradient-text">Freelance</span></span>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 340px; margin-bottom: 16px;">
+                    The verified student freelance marketplace connecting forward-thinking clients with talented university students for web development, design, AI, writing, and more.
+                </p>
+                <div style="display: flex; gap: 12px;">
+                    <span class="badge badge-open"><i class="fa-solid fa-shield-check"></i> Verified Students</span>
+                    <span class="badge badge-student"><i class="fa-solid fa-bolt"></i> Fast Delivery</span>
+                </div>
+            </div>
+
+            <div>
+                <h4 class="footer-title">For Students</h4>
+                <ul class="footer-links">
+                    <li><a href="{% url 'browse_projects' %}">Browse Projects</a></li>
+                    <li><a href="{% url 'register' %}">Create Freelancer Account</a></li>
+                    <li><a href="{% url 'dashboard' %}">Student Dashboard</a></li>
+                    <li><a href="{% url 'applications' %}">Track Proposals</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h4 class="footer-title">For Clients</h4>
+                <ul class="footer-links">
+                    <li><a href="{% url 'post_project' %}">Post a Project</a></li>
+                    <li><a href="{% url 'freelancers_list' %}">Hire Student Freelancers</a></li>
+                    <li><a href="{% url 'dashboard' %}">Manage Projects</a></li>
+                    <li><a href="{% url 'applications' %}">Review Proposals</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h4 class="footer-title">Platform</h4>
+                <ul class="footer-links">
+                    <li><a href="{% url 'home' %}">Home</a></li>
+                    {% if user.is_staff or user.is_superuser %}
+                        <li><a href="{% url 'admin_dashboard' %}">Admin Dashboard</a></li>
+                        <li><a href="/admin/">Django Admin</a></li>
+                    {% endif %}
+                    <li><a href="{% url 'messages_inbox' %}">Direct Messenger</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>&copy; 2026 Student Freelance Marketplace. Built with modern Django, secure auth, and responsive UI.</p>
+            <p style="color: var(--text-dim);">Empowering the next generation of builders.</p>
+        </div>
+    </footer>
+
+    <!-- INTERACTIVE JAVASCRIPT -->
+    <script>
+        function toggleMobileMenu() {
+            const drawer = document.getElementById('mobileNavDrawer');
+            drawer.classList.toggle('active');
+        }
+
+        function toggleUserDropdown(e) {
+            e.stopPropagation();
+            const dropdown = document.getElementById('userMenuDropdown');
+            dropdown.classList.toggle('open');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('userMenuDropdown');
+            if (dropdown && !dropdown.contains(e.target)) {
+                dropdown.classList.remove('open');
+            }
+        });
+
+        // Auto-dismiss toasts after 5 seconds
+        setTimeout(function() {
+            document.querySelectorAll('.toast').forEach(function(toast) {
+                toast.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-10px)';
+                setTimeout(() => toast.remove(), 400);
+            });
+        }, 5000);
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ target_user.first_name|default:target_user.username }}'s Freelancer Profile - StudentFreelance{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 20px;">
+    <a href="{% url 'freelancers_list' %}" style="color: var(--text-muted); font-size: 0.88rem; display: inline-flex; align-items: center; gap: 6px;">
+        <i class="fa-solid fa-arrow-left"></i> Back to Freelancers Directory
+    </a>
+</div>
+
+<!-- PROFILE HERO -->
+<div class="profile-hero">
+    <div class="profile-hero-left">
+        <div class="profile-avatar-xl {{ target_profile.avatar_color|default:'indigo' }}">
+            {{ target_profile.get_initials }}
+        </div>
+
+        <div>
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <h1 style="font-size: 1.85rem; font-weight: 800; color: #fff;">
+                    {{ target_user.first_name|default:target_user.username }} {{ target_user.last_name }}
+                </h1>
+                <span style="color: var(--text-dim); font-size: 0.9rem;">@{{ target_user.username }}</span>
+                <span class="badge badge-student">
+                    <i class="fa-solid fa-graduation-cap"></i> Verified Student
+                </span>
+            </div>
+
+            <p style="color: #a5b4fc; font-size: 1.05rem; font-weight: 600; margin-top: 4px;">
+                {{ target_profile.headline|default:"Student Freelancer & Developer" }}
+            </p>
+
+            <div style="display: flex; gap: 14px; margin-top: 10px; font-size: 0.88rem; color: var(--text-muted); flex-wrap: wrap;">
+                {% if target_profile.university %}
+                    <span><i class="fa-solid fa-building-columns" style="color: var(--secondary);"></i> {{ target_profile.university }}</span>
+                {% endif %}
+                {% if target_profile.major %}
+                    <span>&bull;</span>
+                    <span><i class="fa-solid fa-book-bookmark"></i> {{ target_profile.major }}</span>
+                {% endif %}
+                {% if target_profile.graduation_year %}
+                    <span>&bull;</span>
+                    <span>Class of {{ target_profile.graduation_year }}</span>
+                {% endif %}
+            </div>
+
+            <!-- SOCIAL & PORTFOLIO LINKS -->
+            <div style="display: flex; gap: 12px; margin-top: 14px; flex-wrap: wrap;">
+                {% if target_profile.github_url %}
+                    <a href="{{ target_profile.github_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
+                        <i class="fa-brands fa-github"></i> GitHub
+                    </a>
+                {% endif %}
+                {% if target_profile.linkedin_url %}
+                    <a href="{{ target_profile.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
+                        <i class="fa-brands fa-linkedin"></i> LinkedIn
+                    </a>
+                {% endif %}
+                {% if target_profile.portfolio_url %}
+                    <a href="{{ target_profile.portfolio_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
+                        <i class="fa-solid fa-globe"></i> Portfolio
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- PROFILE ACTIONS -->
+    <div style="display: flex; flex-direction: column; gap: 10px; min-width: 200px;">
+        <div style="background: var(--bg-surface); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); text-align: center;">
+            <div style="font-size: 0.78rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Hourly Rate</div>
+            <div style="font-size: 1.6rem; font-weight: 800; color: #34d399;">
+                {% if target_profile.hourly_rate > 0 %}
+                    ₹{{ target_profile.hourly_rate }}<span style="font-size: 0.85rem; font-weight: normal; color: var(--text-muted);">/hr</span>
+                {% else %}
+                    Negotiable
+                {% endif %}
+            </div>
+        </div>
+
+        {% if user.is_authenticated and user != target_user %}
+            <a href="{% url 'messages_chat' target_user.id %}" class="btn btn-primary" style="width: 100%;">
+                <i class="fa-solid fa-comment-dots"></i> Message Freelancer
+            </a>
+            {% if can_review and reviewable_project %}
+                <a href="{% url 'add_review' reviewable_project.id target_user.id %}" class="btn btn-outline-primary" style="width: 100%;">
+                    <i class="fa-solid fa-star"></i> Write a Review
+                </a>
+            {% endif %}
+        {% elif user == target_user %}
+            <a href="{% url 'edit_profile' %}" class="btn btn-secondary" style="width: 100%;">
+                <i class="fa-solid fa-user-pen"></i> Edit Profile
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- STATS CARDS -->
+<div class="stats-grid" style="margin-bottom: 30px;">
+    <div class="stat-card">
+        <div class="stat-number" style="color: #fbbf24;">
+            ★ {{ target_profile.average_rating }}
+        </div>
+        <div class="stat-label">Average Star Rating</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number" style="color: #818cf8;">{{ reviews.count }}</div>
+        <div class="stat-label">Client Reviews</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number" style="color: #34d399;">{{ completed_projects.count }}</div>
+        <div class="stat-label">Projects Completed</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number" style="color: #06b6d4;">{{ target_profile.get_skills_list|length }}</div>
+        <div class="stat-label">Verified Skills</div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 28px;">
+    <!-- LEFT COLUMN -->
+    <div>
+        <!-- ABOUT BIO -->
+        <div class="card" style="margin-bottom: 24px;">
+            <h2 style="font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 14px;">
+                <i class="fa-solid fa-user" style="color: var(--primary); margin-right: 8px;"></i>
+                About Me
+            </h2>
+            <div style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.7; white-space: pre-line;">
+                {{ target_profile.bio|default:"This student freelancer has not written a detailed bio yet." }}
+            </div>
+        </div>
+
+        <!-- REVIEWS & RATINGS -->
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="font-size: 1.25rem; font-weight: 700; color: #fff;">
+                    <i class="fa-solid fa-star" style="color: #fbbf24; margin-right: 8px;"></i>
+                    Client Reviews & Ratings ({{ reviews.count }})
+                </h2>
+                <div style="display: flex; align-items: center; gap: 6px; color: #fbbf24; font-weight: 800; font-size: 1.1rem;">
+                    ★ {{ target_profile.average_rating }} / 5.0
+                </div>
+            </div>
+
+            {% for rev in reviews %}
+                <div style="background: var(--bg-surface); padding: 18px; border-radius: var(--radius-md); margin-bottom: 14px; border: 1px solid var(--border-subtle);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                        <div>
+                            <strong style="color: #fff; font-size: 0.95rem;">{{ rev.reviewer.username }}</strong>
+                            <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 2px;">
+                                Project: <a href="{% url 'project_detail' rev.project.id %}" style="color: var(--primary);">{{ rev.project.title }}</a>
+                            </div>
+                        </div>
+
+                        <div style="color: #fbbf24; font-size: 0.92rem;">
+                            {% for i in "12345"|make_list %}
+                                {% if forloop.counter <= rev.rating %}
+                                    <i class="fa-solid fa-star"></i>
+                                {% else %}
+                                    <i class="fa-regular fa-star"></i>
+                                {% endif %}
+                            {% endfor %}
+                            <span style="font-weight: 700; margin-left: 4px;">{{ rev.rating }}.0</span>
+                        </div>
+                    </div>
+
+                    <p style="color: var(--text-main); font-size: 0.92rem; line-height: 1.6;">
+                        {{ rev.comment }}
+                    </p>
+
+                    <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 8px;">
+                        {{ rev.created_at|date:"F d, Y" }}
+                    </div>
+                </div>
+            {% empty %}
+                <div style="text-align: center; padding: 30px; color: var(--text-muted);">
+                    <i class="fa-regular fa-star" style="font-size: 2.2rem; color: var(--text-dim); margin-bottom: 10px;"></i>
+                    <p>No client reviews received yet. Reviews will show here as projects are completed.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- RIGHT SIDEBAR -->
+    <div>
+        <!-- SKILLS & PROFICIENCIES -->
+        <div class="card" style="margin-bottom: 24px;">
+            <h3 style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 14px;">
+                <i class="fa-solid fa-code" style="color: var(--primary); margin-right: 6px;"></i>
+                Skills & Technologies
+            </h3>
+            <div class="skills-tags-wrap">
+                {% for skill in target_profile.get_skills_list %}
+                    <span class="skill-tag" style="padding: 6px 12px; font-size: 0.82rem;">
+                        {{ skill }}
+                    </span>
+                {% empty %}
+                    <span style="color: var(--text-dim); font-size: 0.85rem;">No skills listed.</span>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- COMPLETED PROJECTS -->
+        <div class="card">
+            <h3 style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 14px;">
+                <i class="fa-solid fa-trophy" style="color: #34d399; margin-right: 6px;"></i>
+                Completed Projects ({{ completed_projects.count }})
+            </h3>
+
+            {% for cp in completed_projects %}
+                <div style="background: var(--bg-surface); padding: 12px; border-radius: var(--radius-sm); margin-bottom: 8px; border: 1px solid var(--border-subtle);">
+                    <div style="font-weight: 700; font-size: 0.9rem; color: #fff;">
+                        <a href="{% url 'project_detail' cp.id %}">{{ cp.title }}</a>
+                    </div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 3px;">
+                        {{ cp.category }} &bull; Budget: ₹{{ cp.budget }}
+                    </div>
+                </div>
+            {% empty %}
+                <p style="color: var(--text-dim); font-size: 0.85rem;">No completed projects on record yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

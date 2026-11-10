@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Freelancers Directory - Student Freelance Marketplace{% endblock %}
+
+{% block content %}
+<div class="section-header" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 14px;">
+    <div>
+        <h1 class="section-title">Verified Student Freelancers</h1>
+        <p class="section-subtitle">Browse passionate university students offering development, design, content, and AI skills</p>
+    </div>
+</div>
+
+<!-- FILTER & SEARCH BAR -->
+<div class="filter-bar-card">
+    <form method="GET" action="{% url 'freelancers_list' %}">
+        <div class="filter-bar-grid">
+            <div class="form-group" style="margin-bottom: 0;">
+                <input type="text" name="q" class="form-input" placeholder="Search by name, skill, bio, or major..." value="{{ q }}">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+                <select name="university" class="form-select">
+                    <option value="">All Universities</option>
+                    {% for u in universities %}
+                        <option value="{{ u }}" {% if selected_university == u %}selected{% endif %}>{{ u }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+                <select name="rating" class="form-select">
+                    <option value="" {% if not selected_rating %}selected{% endif %}>Any Rating</option>
+                    <option value="4.5" {% if selected_rating == '4.5' %}selected{% endif %}>4.5★ & Above</option>
+                    <option value="4.0" {% if selected_rating == '4.0' %}selected{% endif %}>4.0★ & Above</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+                <select name="sort" class="form-select">
+                    <option value="rating" {% if selected_sort == 'rating' %}selected{% endif %}>Highest Rated</option>
+                    <option value="rate_low" {% if selected_sort == 'rate_low' %}selected{% endif %}>Hourly Rate: Low to High</option>
+                    <option value="rate_high" {% if selected_sort == 'rate_high' %}selected{% endif %}>Hourly Rate: High to Low</option>
+                    <option value="newest" {% if selected_sort == 'newest' %}selected{% endif %}>Recently Joined</option>
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa-solid fa-filter"></i> Search
+                </button>
+                {% if q or selected_university or selected_rating %}
+                    <a href="{% url 'freelancers_list' %}" class="btn btn-secondary" title="Reset filters">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- FREELANCERS GRID -->
+<div class="freelancers-grid">
+    {% for profile in freelancers %}
+        <div class="freelancer-card">
+            <div class="freelancer-avatar-lg {{ profile.avatar_color|default:'indigo' }}">
+                {{ profile.get_initials }}
+            </div>
+
+            <h2 class="freelancer-name">
+                <a href="{% url 'freelancer_profile' profile.user.id %}" style="color: #fff;">
+                    {{ profile.user.first_name|default:profile.user.username }} {{ profile.user.last_name }}
+                </a>
+            </h2>
+
+            <div class="freelancer-headline">
+                {{ profile.headline|default:"Student Developer & Freelancer" }}
+            </div>
+
+            {% if profile.university %}
+                <div class="freelancer-uni-badge">
+                    <i class="fa-solid fa-building-columns"></i> {{ profile.university }}
+                </div>
+            {% endif %}
+
+            <div class="star-rating-box">
+                <i class="fa-solid fa-star"></i>
+                <span>{{ profile.average_rating }}</span>
+                <span style="color: var(--text-dim); font-size: 0.8rem;">
+                    ({{ profile.total_reviews }} review{{ profile.total_reviews|pluralize }})
+                </span>
+            </div>
+
+            <div class="skills-tags-wrap" style="justify-content: center; margin-bottom: 16px; min-height: 48px;">
+                {% for skill in profile.get_skills_list|slice:":4" %}
+                    <span class="skill-tag">{{ skill }}</span>
+                {% empty %}
+                    <span class="skill-tag">Motivated Learner</span>
+                {% endfor %}
+            </div>
+
+            <div style="width: 100%; border-top: 1px solid var(--border-subtle); padding-top: 14px; margin-top: auto; display: flex; justify-content: space-between; align-items: center;">
+                <div class="freelancer-rate-pill">
+                    {% if profile.hourly_rate > 0 %}
+                        ₹{{ profile.hourly_rate }}<span style="font-size: 0.78rem; color: var(--text-muted); font-weight: normal;">/hr</span>
+                    {% else %}
+                        <span style="font-size: 0.82rem; color: var(--text-muted); font-weight: normal;">Negotiable</span>
+                    {% endif %}
+                </div>
+
+                <div style="display: flex; gap: 8px;">
+                    <a href="{% url 'freelancer_profile' profile.user.id %}" class="btn btn-secondary btn-sm">
+                        View Profile
+                    </a>
+                    {% if user.is_authenticated and user != profile.user %}
+                        <a href="{% url 'messages_chat' profile.user.id %}" class="btn btn-primary btn-sm" title="Message Student">
+                            <i class="fa-solid fa-message"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 50px;">
+            <i class="fa-solid fa-user-graduate" style="font-size: 2.8rem; color: var(--text-dim); margin-bottom: 14px;"></i>
+            <h3 style="color: #fff; font-size: 1.3rem;">No Freelancers Found</h3>
+            <p style="color: var(--text-muted); margin: 8px auto 20px; max-width: 480px;">
+                No student profiles matched your search criteria. Try modifying your filters or clear your search query.
+            </p>
+            <a href="{% url 'freelancers_list' %}" class="btn btn-secondary">Reset Search</a>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

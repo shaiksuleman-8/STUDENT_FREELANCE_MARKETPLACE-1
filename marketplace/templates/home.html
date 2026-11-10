@@ -1,0 +1,259 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Freelance Marketplace - Connect, Build & Earn{% endblock %}
+
+{% block content %}
+<!-- HERO BANNER -->
+<section class="hero-section">
+    <div class="hero-pill">
+        <i class="fa-solid fa-sparkles"></i> 100% University Verified Student Talent
+    </div>
+    <h1 class="hero-title">
+        Hire Skilled Student Talent,<br>
+        <span class="gradient-text">Build High-Impact Projects</span>
+    </h1>
+    <p class="hero-subtitle">
+        Connect directly with motivated university students for web development, UI/UX design, mobile apps, AI, and content writing. Affordable rates, high dedication.
+    </p>
+
+    <!-- LIVE SEARCH BAR -->
+    <form action="{% url 'browse_projects' %}" method="GET" class="hero-search-bar">
+        <i class="fa-solid fa-magnifying-glass" style="color: var(--text-dim); margin-left: 6px;"></i>
+        <input type="text" name="q" class="hero-search-input" placeholder="Search by skill, e.g. Python, React, Figma, Flutter..." required>
+        <button type="submit" class="btn btn-primary">Find Projects</button>
+    </form>
+
+    <div style="display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;">
+        <a href="{% url 'browse_projects' %}" class="btn btn-secondary">
+            <i class="fa-solid fa-briefcase"></i> Explore All Projects
+        </a>
+        <a href="{% url 'freelancers_list' %}" class="btn btn-outline-primary">
+            <i class="fa-solid fa-user-graduate"></i> Browse Freelancers
+        </a>
+    </div>
+</section>
+
+<!-- PLATFORM LIVE STATS -->
+<section class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-number gradient-text">{{ total_students }}+</div>
+        <div class="stat-label">Student Freelancers</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number" style="color: #60a5fa;">{{ total_projects }}+</div>
+        <div class="stat-label">Projects Published</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number" style="color: #34d399;">{{ completed_projects }}+</div>
+        <div class="stat-label">Successful Deliveries</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number" style="color: #fbbf24;">{{ avg_rating }} <i class="fa-solid fa-star" style="font-size: 1.2rem;"></i></div>
+        <div class="stat-label">Average Student Rating</div>
+    </div>
+</section>
+
+<!-- EXPLORE CATEGORIES -->
+<section style="margin-bottom: 50px;">
+    <div class="section-header" style="text-align: center;">
+        <h2 class="section-title">Explore by Domain & Category</h2>
+        <p class="section-subtitle">Find specialized student freelancers or projects across popular industries</p>
+    </div>
+
+    <div class="categories-grid">
+        {% for cat in categories %}
+            <a href="{% url 'browse_projects' %}?category={{ cat.name|urlencode }}" class="category-card">
+                <div class="category-icon-box">
+                    {% if 'Web' in cat.name %}
+                        <i class="fa-solid fa-code"></i>
+                    {% elif 'Mobile' in cat.name %}
+                        <i class="fa-solid fa-mobile-screen"></i>
+                    {% elif 'Design' in cat.name %}
+                        <i class="fa-solid fa-palette"></i>
+                    {% elif 'Data' in cat.name %}
+                        <i class="fa-solid fa-brain"></i>
+                    {% elif 'Writing' in cat.name %}
+                        <i class="fa-solid fa-pen-nib"></i>
+                    {% else %}
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    {% endif %}
+                </div>
+                <div class="category-title">{{ cat.name }}</div>
+                <div class="category-desc">{{ cat.desc }}</div>
+                <div class="category-meta">{{ cat.count }} Active Projects &rarr;</div>
+            </a>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- RECENT FEATURED PROJECTS -->
+<section style="margin-bottom: 50px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;">
+        <div>
+            <h2 class="section-title">Latest Project Opportunities</h2>
+            <p class="section-subtitle">Freshly posted student-friendly gigs ready for proposals</p>
+        </div>
+        <a href="{% url 'browse_projects' %}" class="btn btn-secondary btn-sm">
+            View All Projects &rarr;
+        </a>
+    </div>
+
+    <div class="projects-grid">
+        {% for project in recent_projects %}
+            <div class="project-card">
+                <div class="project-card-header">
+                    <div>
+                        <span class="badge badge-student" style="margin-bottom: 8px;">{{ project.category }}</span>
+                        <h3 class="project-title">
+                            <a href="{% url 'project_detail' project.id %}">{{ project.title }}</a>
+                        </h3>
+                    </div>
+                    <div class="project-budget-tag">₹{{ project.budget }}</div>
+                </div>
+
+                <p class="project-desc-snippet">{{ project.description }}</p>
+
+                <div class="skills-tags-wrap">
+                    {% for skill in project.get_skills_list|slice:":3" %}
+                        <span class="skill-tag"><i class="fa-solid fa-tag"></i> {{ skill }}</span>
+                    {% empty %}
+                        <span class="skill-tag">Student Friendly</span>
+                    {% endfor %}
+                </div>
+
+                <div class="project-card-footer">
+                    <div class="client-meta-wrap">
+                        <i class="fa-solid fa-user-circle" style="color: var(--text-dim); font-size: 1rem;"></i>
+                        <span>Posted by <strong>{{ project.client.username }}</strong></span>
+                    </div>
+                    <a href="{% url 'project_detail' project.id %}" class="btn btn-primary btn-sm">
+                        View & Apply
+                    </a>
+                </div>
+            </div>
+        {% empty %}
+            <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                <i class="fa-solid fa-folder-open" style="font-size: 2.5rem; color: var(--text-dim); margin-bottom: 12px;"></i>
+                <h3 style="color: #fff;">No Open Projects Right Now</h3>
+                <p style="color: var(--text-muted); margin: 8px 0 16px;">Be the first client to publish an exciting project for students!</p>
+                <a href="{% url 'post_project' %}" class="btn btn-primary">Post a New Project</a>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- TOP STUDENT FREELANCERS -->
+{% if top_freelancers %}
+<section style="margin-bottom: 50px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;">
+        <div>
+            <h2 class="section-title">Featured Student Freelancers</h2>
+            <p class="section-subtitle">Top rated university students with verified portfolios and skills</p>
+        </div>
+        <a href="{% url 'freelancers_list' %}" class="btn btn-secondary btn-sm">
+            Meet All Freelancers &rarr;
+        </a>
+    </div>
+
+    <div class="freelancers-grid">
+        {% for profile in top_freelancers %}
+            <div class="freelancer-card">
+                <div class="freelancer-avatar-lg {{ profile.avatar_color|default:'indigo' }}">
+                    {{ profile.get_initials }}
+                </div>
+                <h3 class="freelancer-name">{{ profile.user.first_name|default:profile.user.username }}</h3>
+                <div class="freelancer-headline">{{ profile.headline|default:"Student Freelancer & Developer" }}</div>
+                {% if profile.university %}
+                    <div class="freelancer-uni-badge">
+                        <i class="fa-solid fa-building-columns"></i> {{ profile.university }}
+                    </div>
+                {% endif %}
+
+                <div class="star-rating-box">
+                    <i class="fa-solid fa-star"></i>
+                    <span>{{ profile.average_rating }}</span>
+                    <span style="color: var(--text-dim); font-size: 0.8rem;">({{ profile.total_reviews }} reviews)</span>
+                </div>
+
+                <div class="skills-tags-wrap" style="justify-content: center; margin-bottom: 18px;">
+                    {% for skill in profile.get_skills_list|slice:":3" %}
+                        <span class="skill-tag">{{ skill }}</span>
+                    {% endfor %}
+                </div>
+
+                <div style="display: flex; gap: 8px; width: 100%;">
+                    <a href="{% url 'freelancer_profile' profile.user.id %}" class="btn btn-secondary btn-sm" style="flex: 1;">
+                        View Profile
+                    </a>
+                    <a href="{% url 'messages_chat' profile.user.id %}" class="btn btn-primary btn-sm">
+                        <i class="fa-solid fa-message"></i>
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- HOW IT WORKS -->
+<section style="margin-bottom: 50px;">
+    <div class="section-header" style="text-align: center;">
+        <h2 class="section-title">How Student Freelance Works</h2>
+        <p class="section-subtitle">A straightforward workflow engineered for students and clients</p>
+    </div>
+
+    <div class="how-it-works-grid">
+        <div class="step-card">
+            <div class="step-number">01</div>
+            <div class="category-icon-box" style="margin-bottom: 16px;">
+                <i class="fa-solid fa-file-circle-plus"></i>
+            </div>
+            <h3 style="font-size: 1.15rem; color: #fff; margin-bottom: 8px;">1. Post or Find a Project</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">
+                Clients post detailed project requirements and deadlines. Students search tailored gigs matching their studies and skills.
+            </p>
+        </div>
+
+        <div class="step-card">
+            <div class="step-number">02</div>
+            <div class="category-icon-box" style="margin-bottom: 16px;">
+                <i class="fa-solid fa-handshake"></i>
+            </div>
+            <h3 style="font-size: 1.15rem; color: #fff; margin-bottom: 8px;">2. Submit & Accept Proposals</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">
+                Students submit competitive proposals with bid amount and delivery times. Clients review student profiles and accept the best fit.
+            </p>
+        </div>
+
+        <div class="step-card">
+            <div class="step-number">03</div>
+            <div class="category-icon-box" style="margin-bottom: 16px;">
+                <i class="fa-solid fa-award"></i>
+            </div>
+            <h3 style="font-size: 1.15rem; color: #fff; margin-bottom: 8px;">3. Complete & Review</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">
+                Collaborate via built-in direct messaging. Once delivered, clients mark the project complete and leave verified ratings.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- DUAL CALL TO ACTION -->
+<section class="card" style="background: radial-gradient(circle at 100% 50%, rgba(99, 102, 241, 0.25) 0%, rgba(21, 28, 44, 0.9) 70%); border-color: rgba(99, 102, 241, 0.3); padding: 48px; text-align: center;">
+    <h2 style="font-size: 2.2rem; font-weight: 800; color: #fff; margin-bottom: 14px;">
+        Ready to Transform How You Work?
+    </h2>
+    <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto 28px; font-size: 1.05rem;">
+        Whether you are a student building your career portfolio or an entrepreneur needing agile project execution, we have you covered.
+    </p>
+    <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+        <a href="{% url 'register' %}" class="btn btn-primary btn-lg">
+            <i class="fa-solid fa-user-plus"></i> Join as a Freelancer
+        </a>
+        <a href="{% url 'post_project' %}" class="btn btn-secondary btn-lg">
+            <i class="fa-solid fa-plus-circle"></i> Post a Project
+        </a>
+    </div>
+</section>
+{% endblock %}
